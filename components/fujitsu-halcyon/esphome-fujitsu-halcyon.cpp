@@ -22,6 +22,17 @@ void FujitsuHalcyonController::setup() {
     uart_event_queue = *idf_parent->get_uart_event_queue();
 #endif
 
+    if (this->gpio_hold_high_ms_ > 0) {
+        if (this->gpio_hold_high_pin_ != nullptr) {
+            ESP_LOGD(TAG, "Holding GPIO high for %u ms", this->gpio_hold_high_ms_);
+            this->gpio_hold_high_pin_->setup();
+            this->gpio_hold_high_pin_->digital_write(true);
+            esphome::delay(this->gpio_hold_high_ms_);
+        } else {
+            ESP_LOGW(TAG, "GPIO hold requested, but no GPIO pin is configured.");
+        }
+    }
+
     this->controller = new fujitsu_general::airstage::h::Controller(
         uart_num,
         this->controller_address_,
@@ -160,6 +171,7 @@ void FujitsuHalcyonController::dump_config() {
     LOG_SENSOR("  ", "Humidity Sensor", this->humidity_sensor_);
     ESP_LOGCONFIG(TAG, "  Ignore Lock: %s", this->ignore_lock_ ? "YES" : "NO");
     ESP_LOGCONFIG(TAG, "  Standby Mode: %s", this->standby_sensor->state ? "ACTIVE" : "NORMAL");
+    ESP_LOGCONFIG(TAG, "  GPIO Hold High: %u ms", this->gpio_hold_high_ms_);
 
     if (this->controller->is_initialized()) {
         auto features = this->controller->get_features();
