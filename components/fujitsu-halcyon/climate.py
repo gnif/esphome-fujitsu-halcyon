@@ -12,6 +12,7 @@ from esphome.components import (
     uart
 )
 from esphome.core import CORE
+from esphome import pins
 
 from esphome.const import (
     CONF_ID,
@@ -45,6 +46,8 @@ CONF_TEMPERATURE_CONTROLLER_ADDRESS = "temperature_controller_address"
 CONF_TEMPERATURE_SENSOR = "temperature_sensor_id"
 CONF_USE_SENSOR = "use_sensor"
 CONF_IGNORE_LOCK = "ignore_lock"
+CONF_GPIO_HOLD_HIGH_MS = "gpio_hold_high_ms"
+CONF_GPIO_HOLD_HIGH_PIN = "gpio_hold_high_pin"
 
 CONF_STANDBY_MODE = "standby_mode"
 CONF_ERROR_CODE = "error_code"
@@ -148,9 +151,18 @@ CONFIG_SCHEMA = climate.climate_schema(FujitsuHalcyonController).extend(
         cv.Optional(CONF_REINITIALIZE, default={CONF_NAME: "Reinitialize", CONF_INTERNAL: True}): button.button_schema(
             CustomButton,
             entity_category=ENTITY_CATEGORY_CONFIG,
-        )
+        ),
+        cv.Optional(CONF_GPIO_HOLD_HIGH_MS, default=0): cv.int_range(min=0),
+        cv.Optional(CONF_GPIO_HOLD_HIGH_PIN): pins.gpio_output_pin_schema
     }
 ).extend(cv.COMPONENT_SCHEMA).extend(uart.UART_DEVICE_SCHEMA).extend(TZSP_SCHEMA)
+
+def validate_hold_high_pin(config):
+    if config[CONF_GPIO_HOLD_HIGH_MS] > 0 and CONF_GPIO_HOLD_HIGH_PIN not in config:
+        raise cv.Invalid("gpio_hold_high_pin is required when gpio_hold_high_ms is set.")
+    return config
+
+CONFIG_SCHEMA = cv.All(CONFIG_SCHEMA, validate_hold_high_pin)
 
 FINAL_VALIDATE_SCHEMA = uart.final_validate_device_schema(
     "fujitsu_halcyon",
@@ -171,6 +183,10 @@ async def to_code(config):
 
     cg.add(var.set_temperature_controller_address(config[CONF_TEMPERATURE_CONTROLLER_ADDRESS]))
     cg.add(var.set_ignore_lock(config[CONF_IGNORE_LOCK]))
+    cg.add(var.set_gpio_hold_high_ms(config[CONF_GPIO_HOLD_HIGH_MS]))
+    if CONF_GPIO_HOLD_HIGH_PIN in config:
+        pin = await cg.gpio_pin_expression(config[CONF_GPIO_HOLD_HIGH_PIN])
+        cg.add(var.set_gpio_hold_high_pin(pin))
 
     varx = cg.Pvariable(config[CONF_STANDBY_MODE][CONF_ID], var.standby_sensor)
     await binary_sensor.register_binary_sensor(varx, config[CONF_STANDBY_MODE])
