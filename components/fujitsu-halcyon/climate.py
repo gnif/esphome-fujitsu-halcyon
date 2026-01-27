@@ -20,6 +20,8 @@ from esphome.const import (
     CONF_INTERNAL,
     CONF_MODE,
     CONF_NAME,
+    CONF_TX_PIN,
+    CONF_UART,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_PROBLEM,
     ENTITY_CATEGORY_CONFIG,
@@ -174,6 +176,15 @@ async def to_code(config):
     cg.add(var.set_temperature_controller_address(config[CONF_TEMPERATURE_CONTROLLER_ADDRESS]))
     cg.add(var.set_ignore_lock(config[CONF_IGNORE_LOCK]))
     cg.add(var.set_uart_tx_high_ms(config[CONF_UART_TX_HIGH_MS]))
+
+    uart_config = None
+    for candidate in CORE.config.get(CONF_UART, []):
+        if candidate[CONF_ID] == config[uart.CONF_UART_ID]:
+            uart_config = candidate
+            break
+    if uart_config is not None and CONF_TX_PIN in uart_config:
+        tx_pin = await cg.gpio_pin_expression(uart_config[CONF_TX_PIN])
+        cg.add(var.set_uart_tx_pin(tx_pin))
 
     varx = cg.Pvariable(config[CONF_STANDBY_MODE][CONF_ID], var.standby_sensor)
     await binary_sensor.register_binary_sensor(varx, config[CONF_STANDBY_MODE])

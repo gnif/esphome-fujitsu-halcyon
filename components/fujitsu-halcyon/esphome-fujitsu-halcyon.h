@@ -81,6 +81,7 @@ class FujitsuHalcyonController : public Component, public climate::Climate, publ
         void set_temperature_sensor(sensor::Sensor* temperature_sensor) { this->temperature_sensor_ = temperature_sensor; }
         void set_temperature_controller_address(uint8_t temperature_controller_address) { this->temperature_controller_address_ = temperature_controller_address; }
         void set_uart_tx_high_ms(uint32_t uart_tx_high_ms) { this->uart_tx_high_ms_ = uart_tx_high_ms; }
+        void set_uart_tx_pin(InternalGPIOPin* uart_tx_pin) { this->uart_tx_pin_ = uart_tx_pin; }
 
     protected:
         uint8_t controller_address_{};
@@ -88,6 +89,7 @@ class FujitsuHalcyonController : public Component, public climate::Climate, publ
         bool ignore_lock_{};
         sensor::Sensor* humidity_sensor_{};
         sensor::Sensor* temperature_sensor_{};
+        InternalGPIOPin* uart_tx_pin_{};
         uint32_t uart_tx_high_ms_{};
 
     private:

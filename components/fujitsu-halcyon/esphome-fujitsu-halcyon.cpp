@@ -16,11 +16,14 @@ void FujitsuHalcyonController::setup() {
     uint8_t uart_num = 0;
     UartEventQueueHandle uart_event_queue = nullptr;
 
+#if defined(ESP32)
+    auto *idf_parent = static_cast<uart::IDFUARTComponent*>(this->parent_);
+#endif
+
     if (this->uart_tx_high_ms_ > 0) {
-        auto *tx_pin = this->parent_->get_tx_pin();
-        if (tx_pin != nullptr) {
-            tx_pin->setup();
-            tx_pin->digital_write(true);
+        if (this->uart_tx_pin_ != nullptr) {
+            this->uart_tx_pin_->setup();
+            this->uart_tx_pin_->digital_write(true);
             delay(this->uart_tx_high_ms_);
         } else {
             ESP_LOGW(TAG, "UART TX high delay requested but no TX pin is configured.");
@@ -28,7 +31,6 @@ void FujitsuHalcyonController::setup() {
     }
 
 #if defined(ESP32)
-    auto *idf_parent = static_cast<uart::IDFUARTComponent*>(this->parent_);
     uart_num = idf_parent->get_hw_serial_number();
     uart_event_queue = *idf_parent->get_uart_event_queue();
 #endif
