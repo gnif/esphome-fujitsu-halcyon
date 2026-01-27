@@ -63,6 +63,7 @@ climate:
   #humidity_sensor: my_humidity_sensor  # ESPHome sensor to read humidity from
 
   #ignore_lock: true  # Ignore child/part/feature lock set on unit or primary/central remote control
+  #uart_tx_high_ms: 150  # Hold UART TX high at boot before UART starts (ms)
 
   # To capture communications for debugging / analysis
   # Use Wireshark with https://github.com/Omniflux/fujitsu-airstage-h-dissector

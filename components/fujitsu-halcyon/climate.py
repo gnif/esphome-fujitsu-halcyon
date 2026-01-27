@@ -56,6 +56,7 @@ CONF_ADVANCE_HORIZONTAL_LOUVER = "advance_horizontal_louver"
 CONF_RESET_FILTER_TIMER = "reset_filter_timer"
 CONF_FILTER_TIMER_EXPIRED = "filter_timer_expired"
 CONF_REINITIALIZE = "reinitialize"
+CONF_UART_TX_HIGH_MS = "uart_tx_high_ms"
 
 CONF_FUNCTION = "function"
 CONF_FUNCTION_VALUE = "function_value"
@@ -148,7 +149,8 @@ CONFIG_SCHEMA = climate.climate_schema(FujitsuHalcyonController).extend(
         cv.Optional(CONF_REINITIALIZE, default={CONF_NAME: "Reinitialize", CONF_INTERNAL: True}): button.button_schema(
             CustomButton,
             entity_category=ENTITY_CATEGORY_CONFIG,
-        )
+        ),
+        cv.Optional(CONF_UART_TX_HIGH_MS, default=0): cv.int_range(min=0)
     }
 ).extend(cv.COMPONENT_SCHEMA).extend(uart.UART_DEVICE_SCHEMA).extend(TZSP_SCHEMA)
 
@@ -171,6 +173,7 @@ async def to_code(config):
 
     cg.add(var.set_temperature_controller_address(config[CONF_TEMPERATURE_CONTROLLER_ADDRESS]))
     cg.add(var.set_ignore_lock(config[CONF_IGNORE_LOCK]))
+    cg.add(var.set_uart_tx_high_ms(config[CONF_UART_TX_HIGH_MS]))
 
     varx = cg.Pvariable(config[CONF_STANDBY_MODE][CONF_ID], var.standby_sensor)
     await binary_sensor.register_binary_sensor(varx, config[CONF_STANDBY_MODE])

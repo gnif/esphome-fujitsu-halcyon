@@ -8,6 +8,7 @@
 #include <esphome/components/sensor/sensor.h>
 #include <esphome/components/text_sensor/text_sensor.h>
 #include <esphome/components/uart/uart.h>
+#include <esphome/core/gpio.h>
 #if defined(ESP32)
 #include <esphome/components/uart/uart_component_esp_idf.h>
 #endif
@@ -79,6 +80,7 @@ class FujitsuHalcyonController : public Component, public climate::Climate, publ
         void set_humidity_sensor(sensor::Sensor* humidity_sensor) { this->humidity_sensor_ = humidity_sensor; }
         void set_temperature_sensor(sensor::Sensor* temperature_sensor) { this->temperature_sensor_ = temperature_sensor; }
         void set_temperature_controller_address(uint8_t temperature_controller_address) { this->temperature_controller_address_ = temperature_controller_address; }
+        void set_uart_tx_high_ms(uint32_t uart_tx_high_ms) { this->uart_tx_high_ms_ = uart_tx_high_ms; }
 
     protected:
         uint8_t controller_address_{};
@@ -86,6 +88,7 @@ class FujitsuHalcyonController : public Component, public climate::Climate, publ
         bool ignore_lock_{};
         sensor::Sensor* humidity_sensor_{};
         sensor::Sensor* temperature_sensor_{};
+        uint32_t uart_tx_high_ms_{};
 
     private:
         fujitsu_general::airstage::h::Controller* controller;

@@ -16,6 +16,17 @@ void FujitsuHalcyonController::setup() {
     uint8_t uart_num = 0;
     UartEventQueueHandle uart_event_queue = nullptr;
 
+    if (this->uart_tx_high_ms_ > 0) {
+        auto *tx_pin = this->parent_->get_tx_pin();
+        if (tx_pin != nullptr) {
+            tx_pin->setup();
+            tx_pin->digital_write(true);
+            delay(this->uart_tx_high_ms_);
+        } else {
+            ESP_LOGW(TAG, "UART TX high delay requested but no TX pin is configured.");
+        }
+    }
+
 #if defined(ESP32)
     auto *idf_parent = static_cast<uart::IDFUARTComponent*>(this->parent_);
     uart_num = idf_parent->get_hw_serial_number();
@@ -155,6 +166,7 @@ void FujitsuHalcyonController::dump_config() {
     LOG_CLIMATE("", "FujitsuHalcyonController", this);
     ESP_LOGCONFIG(TAG, "  Controller Address: %u (%s)", this->controller_address_, ControllerName[std::clamp(static_cast<size_t>(this->controller_address_), 0u, ControllerName.size() - 1)]);
     ESP_LOGCONFIG(TAG, "  Remote Temperature Controller Address: %u (%s)", this->temperature_controller_address_, ControllerName[std::clamp(static_cast<size_t>(this->temperature_controller_address_), 0u, ControllerName.size() - 1)]);
+    ESP_LOGCONFIG(TAG, "  UART TX High Delay: %u ms", this->uart_tx_high_ms_);
     LOG_SENSOR("  ", "Remote Temperature Controller Sensor", this->remote_sensor);
     LOG_SENSOR("  ", "Temperature Sensor", this->temperature_sensor_);
     LOG_SENSOR("  ", "Humidity Sensor", this->humidity_sensor_);
