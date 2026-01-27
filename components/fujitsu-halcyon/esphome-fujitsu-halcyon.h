@@ -8,7 +8,9 @@
 #include <esphome/components/sensor/sensor.h>
 #include <esphome/components/text_sensor/text_sensor.h>
 #include <esphome/components/uart/uart.h>
+#if defined(ESP32)
 #include <esphome/components/uart/uart_component_esp_idf.h>
+#endif
 
 #include <esphome/components/tzsp/tzsp.h>
 
@@ -17,7 +19,15 @@
 #include "esphome-custom-switch.h"
 #include "Controller.h"
 
+#include <array>
+
 namespace esphome::fujitsu_general_airstage_h_controller {
+
+#if defined(ESP32)
+using FujitsuUartParent = uart::IDFUARTComponent;
+#else
+using FujitsuUartParent = uart::UARTComponent;
+#endif
 
 class FujitsuHalcyonController : public Component, public climate::Climate, public uart::UARTDevice, public tzsp::TZSPSender {
     public:
@@ -48,10 +58,13 @@ class FujitsuHalcyonController : public Component, public climate::Climate, publ
                 this->controller->set_function(this->function->state, this->function_value->state, this->function_unit->state);
         });
 
-        FujitsuHalcyonController(uart::IDFUARTComponent *parent, uint8_t controller_address) : uart::UARTDevice(parent), controller_address_(controller_address) {}
+        FujitsuHalcyonController(FujitsuUartParent *parent, uint8_t controller_address) : uart::UARTDevice(parent), controller_address_(controller_address) {}
 
         void setup() override;
         void dump_config() override;
+#if !defined(ESP32)
+        void loop() override;
+#endif
         float get_setup_priority() const override { return esphome::setup_priority::DATA; }
 //        bool can_proceed() { return this->is_failed() || this->controller->is_initialized(); }
 
@@ -88,9 +101,16 @@ class FujitsuHalcyonController : public Component, public climate::Climate, publ
         static constexpr fujitsu_general::airstage::h::FanSpeedEnum climate_fan_mode_to_fan_speed(climate::ClimateFanMode fan_speed) noexcept;
         static constexpr std::pair<bool, bool> climate_swing_mode_to_swing_mode(climate::ClimateSwingMode swing_mode) noexcept;
 
+#if defined(ESP32)
         static constexpr uint8_t uart_data_bits_to_uart_config_data_bits(uart_word_length_t bits) noexcept;
         static constexpr uint8_t uart_stop_bits_to_uart_config_stop_bits(uart_stop_bits_t bits) noexcept;
         static constexpr uart::UARTParityOptions uart_parity_to_uart_config_parity(uart_parity_t parity) noexcept;
+#endif
+
+#if !defined(ESP32)
+        fujitsu_general::airstage::h::Packet::Buffer rx_buffer_{};
+        size_t rx_offset_{0};
+#endif
 };
 
 }
