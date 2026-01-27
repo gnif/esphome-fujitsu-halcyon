@@ -119,6 +119,8 @@ class FujitsuHalcyonController : public Component, public climate::Climate, publ
 #if !defined(ESP32)
         fujitsu_general::airstage::h::Packet::Buffer rx_buffer_{};
         size_t rx_offset_{0};
+        uint32_t last_rx_micros_{0};
+        uint32_t rx_idle_threshold_us_{0};
 #endif
 };
 

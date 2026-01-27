@@ -64,6 +64,11 @@ void FujitsuHalcyonController::setup() {
         return;
     }
 
+#if !defined(ESP32)
+    const auto symbol_time_us = 1000000UL / fujitsu_general::airstage::h::UARTConfig.baud_rate;
+    this->rx_idle_threshold_us_ = symbol_time_us * fujitsu_general::airstage::h::UARTInterPacketSymbolSpacing;
+#endif
+
     // Use specified sensor for this components reported temperature
     if (this->temperature_sensor_ != nullptr) {
         // Temperature sensor is in Fahrenheit, but need Celsius
@@ -127,6 +132,13 @@ void FujitsuHalcyonController::loop() {
         return;
     }
 
+    if (this->rx_offset_ > 0 && this->available() == 0 && this->last_rx_micros_ != 0) {
+        const auto idle_time = micros() - this->last_rx_micros_;
+        if (idle_time > this->rx_idle_threshold_us_) {
+            this->rx_offset_ = 0;
+        }
+    }
+
     while (this->available() > 0) {
         const size_t chunk = std::min(static_cast<size_t>(this->available()),
                                       this->rx_buffer_.size() - this->rx_offset_);
@@ -136,6 +148,7 @@ void FujitsuHalcyonController::loop() {
 
         this->read_array(this->rx_buffer_.data() + this->rx_offset_, chunk);
         this->rx_offset_ += chunk;
+        this->last_rx_micros_ = micros();
 
         if (this->rx_offset_ == this->rx_buffer_.size()) {
             const bool last_packet_on_wire =
