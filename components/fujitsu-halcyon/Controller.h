@@ -11,6 +11,15 @@
 #include <driver/uart.h>
 using UartEventQueueHandle = QueueHandle_t;
 #else
+#ifdef UART_DATA_8_BITS
+#undef UART_DATA_8_BITS
+#endif
+#ifdef UART_PARITY_EVEN
+#undef UART_PARITY_EVEN
+#endif
+#ifdef UART_STOP_BITS_1
+#undef UART_STOP_BITS_1
+#endif
 using UBaseType_t = uint32_t;
 using uart_port_t = uint8_t;
 using uart_word_length_t = uint8_t;

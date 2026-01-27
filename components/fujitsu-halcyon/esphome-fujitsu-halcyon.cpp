@@ -14,7 +14,7 @@ constexpr std::array ControllerName = { "Primary", "Secondary", "Undocumented" }
 
 void FujitsuHalcyonController::setup() {
     uint8_t uart_num = 0;
-    fujitsu_general::airstage::h::UartEventQueueHandle uart_event_queue = nullptr;
+    UartEventQueueHandle uart_event_queue = nullptr;
 
 #if defined(ESP32)
     auto *idf_parent = static_cast<uart::IDFUARTComponent*>(this->parent_);
@@ -31,7 +31,9 @@ void FujitsuHalcyonController::setup() {
             .Function = [this](const fujitsu_general::airstage::h::Function& data){ this->update_from_device(data); },
             .ControllerConfig = [this](const uint8_t address, const fujitsu_general::airstage::h::Config& data){ this->update_from_controller(address, data); },
             .InitializationStage = [this](const fujitsu_general::airstage::h::InitializationStageEnum stage){
-                this->initialization_sensor->publish_state(str_sprintf("(%d/%d)", stage, fujitsu_general::airstage::h::InitializationStageEnum::Complete));
+                this->initialization_sensor->publish_state(
+                    str_sprintf("(%d/%d)", static_cast<int>(stage),
+                                static_cast<int>(fujitsu_general::airstage::h::InitializationStageEnum::Complete)));
             },
             .ReadBytes  = [this](uint8_t *buf, size_t length){
                 this->read_array(buf, length);
@@ -138,7 +140,9 @@ void FujitsuHalcyonController::log_buffer(const char* dir, const uint8_t* buf, s
     for (auto &b : tbuf)
         b ^= 0xFF;
 
+#if defined(ESP32)
     this->tzsp_send(tbuf);
+#endif
     ESP_LOGD(TAG, "%s: %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX", dir, tbuf[0], tbuf[1], tbuf[2], tbuf[3], tbuf[4], tbuf[5], tbuf[6], tbuf[7]);
 }
 
@@ -169,7 +173,9 @@ void FujitsuHalcyonController::dump_config() {
     if (!this->use_sensor_switch->is_internal())
         ESP_LOGCONFIG(TAG, "  Use Temperature Sensor: %s", this->use_sensor_switch->state ? "YES" : "NO");
 
+#if defined(ESP32)
     LOG_TZSP("  ", this);
+#endif
 
 #if defined(ESP32)
     this->check_uart_settings(
