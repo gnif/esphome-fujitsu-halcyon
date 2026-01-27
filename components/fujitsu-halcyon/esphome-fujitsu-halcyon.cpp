@@ -12,12 +12,23 @@ static const auto TAG = "esphome::fujitsu_general_airstage_h_controller";
 
 constexpr std::array ControllerName = { "Primary", "Secondary", "Undocumented" };
 
+namespace {
+template <typename T>
+auto get_uart_tx_pin_or_null(T *parent, int) -> decltype(parent->get_tx_pin()) {
+    return parent->get_tx_pin();
+}
+
+inline gpio::GPIOPin *get_uart_tx_pin_or_null(...) {
+    return nullptr;
+}
+} // namespace
+
 void FujitsuHalcyonController::setup() {
     uint8_t uart_num = 0;
     UartEventQueueHandle uart_event_queue = nullptr;
 
     if (this->uart_tx_high_ms_ > 0) {
-        auto *tx_pin = this->parent_->get_tx_pin();
+        auto *tx_pin = get_uart_tx_pin_or_null(this->parent_, 0);
         if (tx_pin != nullptr) {
             tx_pin->setup();
             tx_pin->digital_write(true);
