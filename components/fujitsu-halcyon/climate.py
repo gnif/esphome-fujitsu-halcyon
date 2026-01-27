@@ -154,8 +154,8 @@ CONFIG_SCHEMA = climate.climate_schema(FujitsuHalcyonController).extend(
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         cv.Optional(CONF_GPIO_HOLD_HIGH_MS, default=0): cv.int_range(min=0),
-        cv.Optional(CONF_GPIO_HOLD_HIGH_PIN): pins.gpio_output_pin_schema.extend(
-            {cv.Optional(CONF_ALLOW_OTHER_USES, default=True): cv.boolean}
+        cv.Optional(CONF_GPIO_HOLD_HIGH_PIN): pins.gpio_output_pin_schema(
+            allow_other_uses=True
         )
     }
 ).extend(cv.COMPONENT_SCHEMA).extend(uart.UART_DEVICE_SCHEMA).extend(TZSP_SCHEMA)
