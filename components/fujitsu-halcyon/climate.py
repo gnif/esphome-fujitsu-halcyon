@@ -15,6 +15,7 @@ from esphome.core import CORE
 from esphome import pins
 
 from esphome.const import (
+    CONF_ALLOW_OTHER_USES,
     CONF_ID,
     CONF_DISABLED_BY_DEFAULT,
     CONF_HUMIDITY_SENSOR,
@@ -153,7 +154,9 @@ CONFIG_SCHEMA = climate.climate_schema(FujitsuHalcyonController).extend(
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         cv.Optional(CONF_GPIO_HOLD_HIGH_MS, default=0): cv.int_range(min=0),
-        cv.Optional(CONF_GPIO_HOLD_HIGH_PIN): pins.gpio_output_pin_schema
+        cv.Optional(CONF_GPIO_HOLD_HIGH_PIN): pins.gpio_output_pin_schema.extend(
+            {cv.Optional(CONF_ALLOW_OTHER_USES, default=True): cv.boolean}
+        )
     }
 ).extend(cv.COMPONENT_SCHEMA).extend(uart.UART_DEVICE_SCHEMA).extend(TZSP_SCHEMA)
 
