@@ -127,7 +127,12 @@ void FujitsuHalcyonController::loop() {
         this->rx_offset_ += chunk;
 
         if (this->rx_offset_ == this->rx_buffer_.size()) {
-            const bool last_packet_on_wire = this->available() == 0;
+            const bool last_packet_on_wire =
+#if defined(ESP8266)
+                true;
+#else
+                this->available() == 0;
+#endif
             this->controller->handle_packet(this->rx_buffer_, last_packet_on_wire);
             this->rx_offset_ = 0;
         }
