@@ -12,6 +12,17 @@ static const auto TAG = "esphome::fujitsu_general_airstage_h_controller";
 
 constexpr std::array ControllerName = { "Primary", "Secondary", "Undocumented" };
 
+namespace {
+template <typename T>
+auto get_uart_tx_pin_or_null(T *parent, int) -> decltype(parent->get_tx_pin()) {
+    return parent->get_tx_pin();
+}
+
+inline gpio::GPIOPin *get_uart_tx_pin_or_null(...) {
+    return nullptr;
+}
+} // namespace
+
 void FujitsuHalcyonController::setup() {
     uint8_t uart_num = 0;
     UartEventQueueHandle uart_event_queue = nullptr;
@@ -21,9 +32,10 @@ void FujitsuHalcyonController::setup() {
 #endif
 
     if (this->uart_tx_high_ms_ > 0) {
-        if (this->uart_tx_pin_ != nullptr) {
-            this->uart_tx_pin_->setup();
-            this->uart_tx_pin_->digital_write(true);
+        auto *tx_pin = get_uart_tx_pin_or_null(this->parent_, 0);
+        if (tx_pin != nullptr) {
+            tx_pin->setup();
+            tx_pin->digital_write(true);
             delay(this->uart_tx_high_ms_);
         } else {
             ESP_LOGW(TAG, "UART TX high delay requested but no TX pin is configured.");
